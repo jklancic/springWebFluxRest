@@ -5,6 +5,7 @@ import org.junit.Test;
 import org.mockito.ArgumentMatchers;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
+import org.reactivestreams.Publisher;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import guru.springframework.spring5webfluxrest.domain.Category;
@@ -45,5 +46,21 @@ public class CategoryControllerTest {
 		webTestClient.get().uri("/api/v1/categories/1234")
 			.exchange()
 			.expectBody(Category.class);
+	}
+	
+	@Test
+	public void create() {
+		BDDMockito.given(categoryRepository.saveAll(ArgumentMatchers.any(Publisher.class)))
+			.willReturn(Flux.just(Category.builder().description("Cat 1").build()));
+		
+		Mono<Category> savedMono = Mono.just(Category.builder().description("Some cat").build());
+		
+		webTestClient.post()
+			.uri("/api/v1/categories/new")
+			.body(savedMono, Category.class)
+			.exchange()
+			.expectStatus()
+			.isCreated();
+			
 	}
 }
